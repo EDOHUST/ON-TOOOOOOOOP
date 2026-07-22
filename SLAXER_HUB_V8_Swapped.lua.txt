@@ -1937,7 +1937,7 @@ local pp=Instance.new("UIPadding",content); pp.PaddingLeft=UDim.new(0,6); pp.Pad
 				if pos.mini then local u=t2u(pos.mini); if u then mini.Position=u end end
 				if pos.combo then local u=t2u(pos.combo); if u then comboBar.Position=u end end
 				
-						
+					
 					
 			end)
 		end
