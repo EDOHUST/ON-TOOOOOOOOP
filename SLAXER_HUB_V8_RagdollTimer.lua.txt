@@ -2643,3 +2643,89 @@ Players.PlayerRemoving:Connect(function(p)
 end)
 
 print("[SLAXER] Ragdoll Timer loaded - ScreenGui mode")
+-- ===================== TP BAT MODULE =====================
+local TP_BAT_ACTIVE = false
+local tpBatConn = nil
+local function getClosestPlayer()
+local char = LP.Character
+if not char then return nil end
+local hrp = char:FindFirstChild("HumanoidRootPart")
+if not hrp then return nil end
+local closest, dist = nil, math.huge
+for _, p in pairs(Players:GetPlayers()) do
+if p ~= LP and p.Character then
+local tr = p.Character:FindFirstChild("HumanoidRootPart")
+if tr then
+local d = (hrp.Position - tr.Position).Magnitude
+if d < dist then
+dist = d
+closest = p
+end
+end
+end
+end
+return closest, dist
+end
+local function getBatTool()
+local char = LP.Character
+if not char then return nil end
+local tool = char:FindFirstChild("Bat")
+if tool then return tool end
+local bp = LP:FindFirstChild("Backpack")
+if bp then
+tool = bp:FindFirstChild("Bat")
+if tool then
+local hum = char:FindFirstChildOfClass("Humanoid")
+if hum then pcall(function() hum:EquipTool(tool) end) end
+return tool
+end
+end
+return nil
+end
+local hittingCD = false
+local function tryHitBatTP()
+if hittingCD then return end
+hittingCD = true
+pcall(function()
+local bat = getBatTool()
+if bat then
+bat:Activate()
+local ev = bat:FindFirstChildWhichIsA("RemoteEvent")
+if ev then ev:FireServer() end
+end
+end)
+task.delay(0.08, function() hittingCD = false end)
+end
+local function startTPBat()
+if tpBatConn then return end
+TP_BAT_ACTIVE = true
+tpBatConn = RunService.Heartbeat:Connect(function()
+if not TP_BAT_ACTIVE then return end
+local char = LP.Character
+if not char then return end
+local hrp = char:FindFirstChild("HumanoidRootPart")
+if not hrp then return end
+local target = getClosestPlayer()
+if target and target.Character then
+local tr = target.Character:FindFirstChild("HumanoidRootPart")
+if tr then
+if sethiddenproperty then
+pcall(function() sethiddenproperty(hrp, "PhysicsRepRootPart", tr) end)
+end
+local targetPos = tr.Position + Vector3.new(0, 0.9, 0)
+if (hrp.Position - targetPos).Magnitude > 8 then
+hrp.CFrame = CFrame.new(targetPos)
+end
+local cam = workspace.CurrentCamera
+if cam then
+cam.CFrame = CFrame.new(cam.CFrame.Position, tr.Position)
+end
+tryHitBatTP()
+end
+end
+end)
+end
+local function stopTPBat()
+if tpBatConn then tpBatConn:Disconnect(); tpBatConn = nil end
+TP_BAT_ACTIVE = false
+end
